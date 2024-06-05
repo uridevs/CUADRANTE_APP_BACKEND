@@ -8,15 +8,17 @@ exports.getMonthSchedule = async (req, res) => {
             where: {
                 date: {
                     [Op.between]: [
-                        new Date(year, month - 1, 1), // month - 1 because JavaScript Date object month is 0-based
-                        new Date(year, month, 0) // This will get the last day of the previous month, so we need to add 1 month and set day to 0 to get the last day of the desired month
+                        new Date(year, month - 1, 1),
+                        new Date(year, month, 0)
                     ]
                 }
             },
             include: Worker
         });
-        res.json(days);
+        res.status(200).json(days);
     } catch (error) {
+        console.error('Error al obtener el cuadrante mensual:', error);
         res.status(500).json({ error: error.message });
     }
 };
+

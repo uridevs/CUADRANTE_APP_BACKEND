@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const helmet = require('helmet');
 require('dotenv').config();
 
 const workersRoutes = require('./routes/workers');
@@ -11,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
+app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
