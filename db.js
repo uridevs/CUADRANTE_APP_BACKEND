@@ -11,7 +11,7 @@ const Day = require('./models/day')(sequelize, DataTypes);
 const Event = require('./models/event')(sequelize, DataTypes);
 const User = require('./models/user')(sequelize, DataTypes);
 
-sequelize.sync() // Solo creará las tablas si no existen
+sequelize.sync({ alter: true }) // Solo creará las tablas si no existen
     .then(() => {
         console.log('Database & tables created or already exist!');
     })

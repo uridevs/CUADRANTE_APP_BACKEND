@@ -1,16 +1,19 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../utils/mailer');
 const { User } = require('../db');
 const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../db');
 
 const register = async (req, res) => {
-    const { email } = req.body;
+    const { email, password } = req.body;
     const transaction = await sequelize.transaction();
 
     try {
         const token = uuidv4();
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await User.create({ email, token }, { transaction });
+        const user = await User.create({ email, password: hashedPassword, token }, { transaction });
         await sendVerificationEmail(email, token);
 
         await transaction.commit();
@@ -23,7 +26,7 @@ const register = async (req, res) => {
         if (error.name === 'SequelizeUniqueConstraintError') {
             res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
         } else {
-            res.status(500).json({ error: 'Error en el registro.' });
+            res.status(500).json({ error: 'Error en el registro.', message: error});
         }
     }
 };
@@ -49,4 +52,33 @@ const verify = async (req, res) => {
     }
 };
 
-module.exports = { register, verify };
+const login = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(400).json({ error: 'Correo electrónico o contraseña incorrectos.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({ error: 'Contraseña incorrecta.' });
+        }
+
+        if (!user.isVerified) {
+            return res.status(400).json({ error: 'Por favor verifica tu correo electrónico.' });
+        }
+
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.status(200).json({ token });
+    } catch (error) {
+        console.error('Error en el login:', error);
+        res.status(500).json({ error: 'Error en el login.' });
+    }
+};
+
+module.exports = { register, verify, login };

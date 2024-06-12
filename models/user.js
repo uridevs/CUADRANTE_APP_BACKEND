@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             unique: true,
         },
+        password: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
         token: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -14,9 +18,22 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        role: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'user', // 'admin' or 'user'
+        },
+        workerId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'workers', // Nombre de la tabla Workers
+                key: 'id'
+            }
+        }
     }, {
         timestamps: true,
-        tableName: 'users' // Cambiado a 'users'
+        tableName: 'users'
     });
 
     return User;
